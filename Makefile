@@ -5,17 +5,6 @@
 
 # 証明書のセットアップ
 setup-certs:
-	@if [ ! -f registry-server/localhost.pem ]; then \
-		echo "🔐 Setting up certificates with mkcert..."; \
-		cd registry-server && mkcert -install; \
-		cd registry-server && mkcert localhost 127.0.0.1 ::1; \
-		echo "✅ Certificates created"; \
-	else \
-		echo "✅ Certificates already exist"; \
-	fi
-
-# mkcertで証明書をセットアップ
-setup-certs:
 	@echo "🔐 Setting up TLS certificates with mkcert..."
 	@if ! command -v mkcert >/dev/null 2>&1; then \
 		echo "❌ mkcert not found. Please install it first."; \
