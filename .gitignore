@@ -1,6 +1,9 @@
 # Devbox
 .devbox/
 
+# Local Terraform Registry
+.terraform-plugins/
+
 # Editor
 .vscode/
 .idea/

@@ -1,7 +1,8 @@
 terraform {
   required_providers {
     mylocal = {
-      source = "local/dev/mylocal"
+      source  = "local.dev/makinzm/mylocal"
+      version = "1.0.0"
     }
   }
 }

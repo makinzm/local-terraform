@@ -15,16 +15,18 @@ make dev
 ## 📋 コマンド一覧
 
 ```bash
-# 開発サイクル（ビルド→適用→確認）
+# 開発サイクル（ビルド→レジストリ追加→初期化→適用→確認）
 make dev
 
 # 個別実行
-make build-provider   # Providerのビルド
-make init-client      # Terraform初期化
-make validate         # 設定の検証
-make plan             # プラン確認
-make apply            # 適用（確認あり）
-make apply-auto       # 適用（自動承認）
+make build-provider    # Providerのビルド
+make setup-registry    # ローカルレジストリ作成
+make install-provider  # Providerをレジストリに追加
+make init-client       # Terraform初期化
+make validate          # 設定の検証
+make plan              # プラン確認
+make apply             # 適用（確認あり）
+make apply-auto        # 適用（自動承認）
 
 # 確認
 make show             # 状態表示
@@ -43,11 +45,12 @@ make help
 
 ```
 local-terraform/
-├── provider-dir/     # Provider開発（Go）
-├── client-dir/       # Terraform実行
-├── Makefile          # 開発タスク
-├── devbox.json       # 環境設定
-└── .terraformrc      # ローカルProvider設定
+├── provider-dir/           # Provider開発（Go）
+├── client-dir/             # Terraform実行
+│   └── .terraformrc        # Terraform設定（filesystem_mirror）
+├── .terraform-plugins/     # ローカルレジストリ（自動生成）
+├── Makefile                # 開発タスク
+└── devbox.json             # 環境設定
 ```
 
 ## 📚 参考リンク

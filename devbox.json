@@ -7,9 +7,7 @@
     "init_hook": [
       "echo '🚀 Devbox environment loaded!'",
       "echo '   - Go: $(go version)'",
-      "echo '   - Terraform: $(terraform version | head -n1)'",
-      "export TF_CLI_CONFIG_FILE=$(pwd)/.terraformrc",
-      "echo '   - TF_CLI_CONFIG_FILE: $TF_CLI_CONFIG_FILE'"
+      "echo '   - Terraform: $(terraform version | head -n1)'"
     ]
   }
 }

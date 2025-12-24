@@ -1,4 +1,4 @@
-.PHONY: build-provider init-client plan apply apply-auto destroy clean dev show validate check-state help
+.PHONY: build-provider setup-registry install-provider init-client plan apply apply-auto destroy clean dev show validate check-state help
 
 # デフォルトターゲット
 .DEFAULT_GOAL := help
@@ -10,47 +10,59 @@ build-provider:
 	cd provider-dir && go build -o terraform-provider-mylocal
 	@echo "✅ Provider built successfully"
 
+# ローカルレジストリの作成
+setup-registry:
+	@echo "📦 Setting up local registry..."
+	@mkdir -p .terraform-plugins/local.dev/makinzm/mylocal/1.0.0/$$(go env GOOS)_$$(go env GOARCH)
+	@echo "✅ Registry created"
+
+# Providerをレジストリに追加
+install-provider: build-provider setup-registry
+	@echo "📥 Installing provider to local registry..."
+	@cp provider-dir/terraform-provider-mylocal .terraform-plugins/local.dev/makinzm/mylocal/1.0.0/$$(go env GOOS)_$$(go env GOARCH)/terraform-provider-mylocal_v1.0.0
+	@echo "✅ Provider installed to registry"
+
 # クライアントの初期化
-init-client: build-provider
+init-client: install-provider
 	@echo "🎬 Initializing Terraform client..."
-	cd client-dir && terraform init
+	cd client-dir && TF_CLI_CONFIG_FILE=.terraformrc terraform init
 	@echo "✅ Terraform initialized"
 
 # Terraform validate
-validate: build-provider
+validate: install-provider
 	@echo "🔍 Validating Terraform configuration..."
-	cd client-dir && terraform validate
+	cd client-dir && TF_CLI_CONFIG_FILE=.terraformrc terraform validate
 	@echo "✅ Configuration is valid"
 
 # Plan実行
-plan: build-provider
+plan: install-provider
 	@echo "📋 Running terraform plan..."
-	cd client-dir && terraform plan
+	cd client-dir && TF_CLI_CONFIG_FILE=.terraformrc terraform plan
 
 # Apply実行
-apply: build-provider
+apply: install-provider
 	@echo "🚀 Running terraform apply..."
-	cd client-dir && terraform apply
+	cd client-dir && TF_CLI_CONFIG_FILE=.terraformrc terraform apply
 
 # Apply（自動承認）
-apply-auto: build-provider
+apply-auto: install-provider
 	@echo "🚀 Running terraform apply (auto-approve)..."
-	cd client-dir && terraform apply -auto-approve
+	cd client-dir && TF_CLI_CONFIG_FILE=.terraformrc terraform apply -auto-approve
 
 # 状態の表示
 show:
 	@echo "📊 Showing current state..."
-	cd client-dir && terraform show
+	cd client-dir && TF_CLI_CONFIG_FILE=.terraformrc terraform show
 
 # 状態の確認（詳細）
 check-state:
 	@echo "📊 Checking Terraform state..."
 	@if [ -f client-dir/terraform.tfstate ]; then \
 		echo "✅ State file exists"; \
-		(cd client-dir && terraform state list); \
+		(cd client-dir && TF_CLI_CONFIG_FILE=.terraformrc terraform state list); \
 		echo ""; \
 		echo "📝 Outputs:"; \
-		(cd client-dir && terraform output); \
+		(cd client-dir && TF_CLI_CONFIG_FILE=.terraformrc terraform output); \
 	else \
 		echo "❌ No state file found. Run 'make apply' first."; \
 	fi
@@ -58,24 +70,27 @@ check-state:
 # Destroy
 destroy:
 	@echo "🗑️  Destroying resources..."
-	cd client-dir && terraform destroy
+	cd client-dir && TF_CLI_CONFIG_FILE=.terraformrc terraform destroy
 
 # Destroy（自動承認）
 destroy-auto:
 	@echo "🗑️  Destroying resources (auto-approve)..."
-	cd client-dir && terraform destroy -auto-approve
+	cd client-dir && TF_CLI_CONFIG_FILE=.terraformrc terraform destroy -auto-approve
 
 # クリーンアップ
 clean:
 	@echo "🧹 Cleaning up..."
 	cd provider-dir && rm -f terraform-provider-mylocal
 	cd client-dir && rm -rf .terraform .terraform.lock.hcl terraform.tfstate*
+	rm -rf .terraform-plugins
 	@echo "✅ Cleanup complete"
 
-# 開発サイクル（ビルド→Apply→確認）
-dev: build-provider
+# 開発サイクル（ビルド→レジストリ追加→初期化→Apply→確認）
+dev: install-provider
+	@echo "🎬 Initializing Terraform..."
+	cd client-dir && TF_CLI_CONFIG_FILE=.terraformrc terraform init -upgrade
 	@echo "🔄 Running development cycle..."
-	cd client-dir && terraform apply -auto-approve
+	cd client-dir && TF_CLI_CONFIG_FILE=.terraformrc terraform apply -auto-approve
 	@echo ""
 	@echo "📊 Current state:"
 	@$(MAKE) --no-print-directory check-state
@@ -84,6 +99,8 @@ dev: build-provider
 help:
 	@echo "📚 Available targets:"
 	@echo "  make build-provider  - Build the Terraform provider"
+	@echo "  make setup-registry  - Create local registry structure"
+	@echo "  make install-provider - Install provider to local registry"
 	@echo "  make init-client     - Initialize Terraform client"
 	@echo "  make validate        - Validate Terraform configuration"
 	@echo "  make plan            - Run terraform plan"
@@ -93,6 +110,6 @@ help:
 	@echo "  make check-state     - Check state and show outputs"
 	@echo "  make destroy         - Destroy all resources (with confirmation)"
 	@echo "  make destroy-auto    - Destroy all resources (auto-approve)"
-	@echo "  make clean           - Clean up generated files"
-	@echo "  make dev             - Development cycle (build + apply + check)"
+	@echo "  make clean           - Clean up generated files and registry"
+	@echo "  make dev             - Development cycle (build + install + apply + check)"
 	@echo "  make help            - Show this help message"
