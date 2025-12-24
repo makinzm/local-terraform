@@ -1,7 +1,8 @@
 {
   "packages": [
     "go@latest",
-    "terraform@latest"
+    "terraform@latest",
+    "mkcert@latest"
   ],
   "shell": {
     "init_hook": [

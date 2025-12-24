@@ -53,6 +53,54 @@
         }
       }
     },
+    "mkcert@latest": {
+      "last_modified": "2025-11-23T21:50:36Z",
+      "resolved": "github:NixOS/nixpkgs/ee09932cedcef15aaf476f9343d1dea2cb77e261#mkcert",
+      "source": "devbox-search",
+      "version": "1.4.4",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/rk2p1j2lzq2l6bk1wadcck557yn65sx5-mkcert-1.4.4",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/rk2p1j2lzq2l6bk1wadcck557yn65sx5-mkcert-1.4.4"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/vkvnaz4gsvjfxr586nrjk94xgi5gxhxb-mkcert-1.4.4",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/vkvnaz4gsvjfxr586nrjk94xgi5gxhxb-mkcert-1.4.4"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/28i3k89kjy62f9yzyqabgnhi45pfw5ay-mkcert-1.4.4",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/28i3k89kjy62f9yzyqabgnhi45pfw5ay-mkcert-1.4.4"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/gpw8mvmgwxaw9ppixvcvwqnhgnagkqy1-mkcert-1.4.4",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/gpw8mvmgwxaw9ppixvcvwqnhgnagkqy1-mkcert-1.4.4"
+        }
+      }
+    },
     "terraform@latest": {
       "last_modified": "2025-12-18T02:44:17Z",
       "resolved": "github:NixOS/nixpkgs/def3da69945bbe338c373fddad5a1bb49cf199ce#terraform",

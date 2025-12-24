@@ -1,0 +1,15 @@
+registry-server
+terraform-registry-server
+providers/
+localhost.pem
+localhost-key.pem
+certs/
+localhost.pem
+localhost-key.pem
+*.pem
+*.pem
+*.key
+localhost+2.pem
+localhost+2-key.pem
+*.pem
+ca-cert.pem

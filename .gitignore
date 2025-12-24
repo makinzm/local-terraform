@@ -4,6 +4,13 @@
 # Local Terraform Registry
 .terraform-plugins/
 
+# Registry Server
+.registry-server.pid
+registry-server/registry-server
+registry-server/providers/
+registry-server/*.pem
+registry-server/gpg-keys/
+
 # Editor
 .vscode/
 .idea/
