@@ -3,57 +3,54 @@
 # デフォルトターゲット
 .DEFAULT_GOAL := help
 
-# Devbox環境でコマンドを実行
-DEVBOX := devbox run --
-
 # Providerのビルド
 build-provider:
 	@echo "🔨 Building provider..."
-	cd provider-dir && $(DEVBOX) go mod download
-	cd provider-dir && $(DEVBOX) go build -o terraform-provider-mylocal
+	cd provider-dir && go mod tidy
+	cd provider-dir && go build -o terraform-provider-mylocal
 	@echo "✅ Provider built successfully"
 
 # クライアントの初期化
 init-client: build-provider
 	@echo "🎬 Initializing Terraform client..."
-	cd client-dir && $(DEVBOX) terraform init
+	cd client-dir && terraform init
 	@echo "✅ Terraform initialized"
 
 # Terraform validate
 validate: build-provider
 	@echo "🔍 Validating Terraform configuration..."
-	cd client-dir && $(DEVBOX) terraform validate
+	cd client-dir && terraform validate
 	@echo "✅ Configuration is valid"
 
 # Plan実行
 plan: build-provider
 	@echo "📋 Running terraform plan..."
-	cd client-dir && $(DEVBOX) terraform plan
+	cd client-dir && terraform plan
 
 # Apply実行
 apply: build-provider
 	@echo "🚀 Running terraform apply..."
-	cd client-dir && $(DEVBOX) terraform apply
+	cd client-dir && terraform apply
 
 # Apply（自動承認）
 apply-auto: build-provider
 	@echo "🚀 Running terraform apply (auto-approve)..."
-	cd client-dir && $(DEVBOX) terraform apply -auto-approve
+	cd client-dir && terraform apply -auto-approve
 
 # 状態の表示
 show:
 	@echo "📊 Showing current state..."
-	cd client-dir && $(DEVBOX) terraform show
+	cd client-dir && terraform show
 
 # 状態の確認（詳細）
 check-state:
 	@echo "📊 Checking Terraform state..."
 	@if [ -f client-dir/terraform.tfstate ]; then \
 		echo "✅ State file exists"; \
-		cd client-dir && $(DEVBOX) terraform state list; \
+		(cd client-dir && terraform state list); \
 		echo ""; \
 		echo "📝 Outputs:"; \
-		cd client-dir && $(DEVBOX) terraform output; \
+		(cd client-dir && terraform output); \
 	else \
 		echo "❌ No state file found. Run 'make apply' first."; \
 	fi
@@ -61,12 +58,12 @@ check-state:
 # Destroy
 destroy:
 	@echo "🗑️  Destroying resources..."
-	cd client-dir && $(DEVBOX) terraform destroy
+	cd client-dir && terraform destroy
 
 # Destroy（自動承認）
 destroy-auto:
 	@echo "🗑️  Destroying resources (auto-approve)..."
-	cd client-dir && $(DEVBOX) terraform destroy -auto-approve
+	cd client-dir && terraform destroy -auto-approve
 
 # クリーンアップ
 clean:
@@ -78,7 +75,7 @@ clean:
 # 開発サイクル（ビルド→Apply→確認）
 dev: build-provider
 	@echo "🔄 Running development cycle..."
-	cd client-dir && $(DEVBOX) terraform apply -auto-approve
+	cd client-dir && terraform apply -auto-approve
 	@echo ""
 	@echo "📊 Current state:"
 	@$(MAKE) --no-print-directory check-state
