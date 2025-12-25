@@ -7,8 +7,8 @@
   "shell": {
     "init_hook": [
       "echo '🚀 Devbox environment loaded!'",
-      "echo '   - Go: $(go version)'",
-      "echo '   - Terraform: $(terraform version | head -n1)'"
+      "echo \"   - Go: $(go version)\"",
+      "echo \"   - Terraform: $(terraform version | head -n1)\""
     ]
   }
 }
