@@ -35,11 +35,17 @@ func resourceFile() *schema.Resource {
 }
 
 func resourceFileCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	// Provider設定を取得
+	config, ok := m.(*ProviderConfig)
+	if ok && config.APIKey != "" {
+		fmt.Printf("✅ [Authenticated with API key] Creating file: %s with content: %s\n",
+			d.Get("name").(string), d.Get("content").(string))
+	} else {
+		fmt.Printf("✅ Creating file: %s with content: %s\n",
+			d.Get("name").(string), d.Get("content").(string))
+	}
+
 	name := d.Get("name").(string)
-	content := d.Get("content").(string)
-
-	fmt.Printf("✅ Creating file: %s with content: %s\n", name, content)
-
 	d.SetId(name)
 	d.Set("created_at", time.Now().Format(time.RFC3339))
 
@@ -47,17 +53,32 @@ func resourceFileCreate(ctx context.Context, d *schema.ResourceData, m interface
 }
 
 func resourceFileRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	fmt.Printf("📖 Reading file: %s\n", d.Id())
+	config, ok := m.(*ProviderConfig)
+	if ok && config.APIKey != "" {
+		fmt.Printf("📖 [Authenticated] Reading file: %s\n", d.Id())
+	} else {
+		fmt.Printf("📖 Reading file: %s\n", d.Id())
+	}
 	return nil
 }
 
 func resourceFileUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	content := d.Get("content").(string)
-	fmt.Printf("🔄 Updating file: %s with new content: %s\n", d.Id(), content)
+	config, ok := m.(*ProviderConfig)
+	if ok && config.APIKey != "" {
+		fmt.Printf("🔄 [Authenticated] Updating file: %s with new content: %s\n", d.Id(), content)
+	} else {
+		fmt.Printf("🔄 Updating file: %s with new content: %s\n", d.Id(), content)
+	}
 	return nil
 }
 
 func resourceFileDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	fmt.Printf("🗑️  Deleting file: %s\n", d.Id())
+	config, ok := m.(*ProviderConfig)
+	if ok && config.APIKey != "" {
+		fmt.Printf("🗑️  [Authenticated] Deleting file: %s\n", d.Id())
+	} else {
+		fmt.Printf("🗑️  Deleting file: %s\n", d.Id())
+	}
 	return nil
 }

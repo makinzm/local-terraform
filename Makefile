@@ -1,7 +1,18 @@
-.PHONY: build-provider build-registry setup-certs start-registry stop-registry install-provider init-client plan apply apply-auto destroy clean clean-certs dev show validate check-state help
+.PHONY: build-provider build-registry setup-certs setup-env start-registry stop-registry install-provider init-client plan apply apply-auto destroy clean clean-certs dev show validate check-state help
 
 # デフォルトターゲット
 .DEFAULT_GOAL := help
+
+# .envファイルから環境変数を読み込むヘルパー
+LOAD_ENV = set -a && [ -f client-dir/.env ] && . client-dir/.env && set +a
+
+# 環境変数ファイルのセットアップ
+setup-env:
+	@if [ ! -f client-dir/.env ]; then \
+		echo "📝 Creating .env file from .env.example..."; \
+		cp client-dir/.env.example client-dir/.env; \
+		echo "✅ .env file created. You can edit client-dir/.env if needed."; \
+	fi
 
 # 証明書のセットアップ
 setup-certs:
@@ -128,31 +139,31 @@ install-provider: build-provider setup-gpg
 	@echo "✅ Provider installed and signed"
 
 # クライアントの初期化
-init-client: start-registry
+init-client: setup-env start-registry
 	@echo "🎬 Initializing Terraform client..."
-	cd client-dir && TF_CLI_CONFIG_FILE=.terraformrc terraform init
+	@$(LOAD_ENV) && cd client-dir && TF_CLI_CONFIG_FILE=.terraformrc terraform init
 	@echo "✅ Terraform initialized"
 
 # Terraform validate
-validate: start-registry
+validate: setup-env start-registry
 	@echo "🔍 Validating Terraform configuration..."
-	cd client-dir && TF_CLI_CONFIG_FILE=.terraformrc terraform validate
+	@$(LOAD_ENV) && cd client-dir && TF_CLI_CONFIG_FILE=.terraformrc terraform validate
 	@echo "✅ Configuration is valid"
 
 # Plan実行
-plan: start-registry
+plan: setup-env start-registry
 	@echo "📋 Running terraform plan..."
-	cd client-dir && TF_CLI_CONFIG_FILE=.terraformrc terraform plan
+	@$(LOAD_ENV) && cd client-dir && TF_CLI_CONFIG_FILE=.terraformrc terraform plan
 
 # Apply実行
-apply: start-registry
+apply: setup-env start-registry
 	@echo "🚀 Running terraform apply..."
-	cd client-dir && TF_CLI_CONFIG_FILE=.terraformrc terraform apply
+	@$(LOAD_ENV) && cd client-dir && TF_CLI_CONFIG_FILE=.terraformrc terraform apply
 
 # Apply（自動承認）
-apply-auto: start-registry
+apply-auto: setup-env start-registry
 	@echo "🚀 Running terraform apply (auto-approve)..."
-	cd client-dir && TF_CLI_CONFIG_FILE=.terraformrc terraform apply -auto-approve
+	@$(LOAD_ENV) && cd client-dir && TF_CLI_CONFIG_FILE=.terraformrc terraform apply -auto-approve
 
 # 状態の表示
 show:
@@ -192,6 +203,7 @@ clean: stop-registry
 	rm -rf .terraform-plugins
 	@echo "✅ Cleanup complete"
 	@echo "ℹ️  Certificates are kept. Run 'make clean-certs' to remove them."
+	@echo "ℹ️  .env file is kept for security. Remove manually if needed."
 
 # 証明書も含めて完全クリーンアップ
 clean-certs:
@@ -200,11 +212,11 @@ clean-certs:
 	@echo "✅ Certificates removed"
 
 # 開発サイクル（ビルド→サーバー起動→初期化→Apply→確認）
-dev: start-registry
+dev: setup-env start-registry
 	@echo "🎬 Initializing Terraform..."
-	cd client-dir && SSL_CERT_FILE=$$(mkcert -CAROOT)/rootCA.pem TF_CLI_CONFIG_FILE=.terraformrc terraform init -upgrade
+	@$(LOAD_ENV) && cd client-dir && SSL_CERT_FILE=$$(mkcert -CAROOT)/rootCA.pem TF_CLI_CONFIG_FILE=.terraformrc terraform init -upgrade
 	@echo "🔄 Running development cycle..."
-	cd client-dir && SSL_CERT_FILE=$$(mkcert -CAROOT)/rootCA.pem TF_CLI_CONFIG_FILE=.terraformrc terraform apply -auto-approve
+	@$(LOAD_ENV) && cd client-dir && SSL_CERT_FILE=$$(mkcert -CAROOT)/rootCA.pem TF_CLI_CONFIG_FILE=.terraformrc terraform apply -auto-approve
 	@echo ""
 	@echo "📊 Current state:"
 	@$(MAKE) --no-print-directory check-state
@@ -214,6 +226,7 @@ help:
 	@echo "📚 Available commands:"
 	@echo "  make build-provider   - Build the Terraform provider"
 	@echo "  make build-registry   - Build the registry server"
+	@echo "  make setup-env        - Create .env file from .env.example (auto-created when needed)"
 	@echo "  make start-registry   - Start the registry server (https://localhost:5758)"
 	@echo "  make install-provider - Install provider to registry"
 	@echo "  make init-client      - Initialize Terraform client"
@@ -228,4 +241,8 @@ help:
 	@echo "  make clean            - Clean up generated files"
 	@echo "  make dev              - Development cycle (start server + init + apply + check)"
 	@echo "  make help             - Show this help message"
+	@echo ""
+	@echo "📝 Quick Start:"
+	@echo "  Run 'make dev' to start development (.env will be auto-created)"
+	@echo "  Edit client-dir/.env to customize your configuration"
 

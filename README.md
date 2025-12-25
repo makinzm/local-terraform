@@ -4,6 +4,21 @@ TerraformのカスタムProviderをローカル環境で開発するためのサ
 
 **HTTP Registry Server**を使用して、実際のPrivate Registryと同じ仕組みで動作します。
 
+## 🔐 認証機能
+
+このプロジェクトには**2つの独立した認証**が実装されています：
+
+1. **Registry認証** - Providerバイナリをダウンロードする際の認証
+2. **Provider認証** - 実際のリソース操作を行う際の認証
+
+詳細は [AUTH.md](AUTH.md) をご覧ください。
+
+### クイック設定
+
+認証は既に設定済みで、そのまま動作します：
+- **Registry認証**: `client-dir/.terraformrc` で設定（トークン: `my-local-dev-token`）
+- **Provider認証**: `client-dir/main.tf` で設定（API Key: `my-service-api-key`）
+
 
 ## 🚀 クイックスタート
 

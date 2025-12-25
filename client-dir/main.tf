@@ -7,7 +7,12 @@ terraform {
   }
 }
 
-provider "mylocal" {}
+provider "mylocal" {
+  # Provider認証（実際のリソース操作用）
+  # レジストリ認証とは別物で、Providerが管理するサービスへの認証情報
+  # 環境変数 MYLOCAL_API_KEY で設定してください
+  # api_key はここに記載せず、環境変数を使用することを推奨
+}
 
 resource "mylocal_file" "example" {
   name    = "example.txt"

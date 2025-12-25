@@ -22,6 +22,51 @@ const (
 	version      = "1.0.0"
 )
 
+var (
+	// Registry認証用のトークン（環境変数 REGISTRY_TOKEN で上書き可能）
+	registryToken = getEnvOrDefault("REGISTRY_TOKEN", "my-local-dev-token")
+)
+
+// getEnvOrDefault retrieves environment variable or returns default value
+func getEnvOrDefault(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
+}
+
+// registryAuthMiddleware validates Bearer token for /v1/* endpoints
+func registryAuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		token := r.Header.Get("Authorization")
+
+		if !strings.HasPrefix(token, "Bearer ") {
+			log.Printf("🚫 Unauthorized: missing Bearer token from %s to %s", r.RemoteAddr, r.URL.Path)
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]string{
+				"error": "Unauthorized: Bearer token required",
+			})
+			return
+		}
+
+		apiToken := token[7:] // Remove "Bearer " prefix
+
+		if apiToken != registryToken {
+			log.Printf("🚫 Unauthorized: invalid token from %s to %s", r.RemoteAddr, r.URL.Path)
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]string{
+				"error": "Unauthorized: invalid token",
+			})
+			return
+		}
+
+		log.Printf("✅ Authenticated request from %s to %s", r.RemoteAddr, r.URL.Path)
+		next(w, r)
+	}
+}
+
 func main() {
 	// mkcertで生成した証明書を使用
 	certFile := "localhost+2.pem"
@@ -40,9 +85,14 @@ func main() {
 		log.Fatalf("Failed to load mkcert certificates: %v", err)
 	}
 
+	// Service Discovery（認証不要）
 	http.HandleFunc("/.well-known/terraform.json", serviceDiscovery)
-	http.HandleFunc(fmt.Sprintf("/v1/providers/%s/%s/versions", namespace, providerName), providerVersions)
-	http.HandleFunc(fmt.Sprintf("/v1/providers/%s/%s/%s/download/", namespace, providerName, version), providerDownload)
+
+	// /v1/* パスには認証が必要（Registry認証）
+	http.HandleFunc(fmt.Sprintf("/v1/providers/%s/%s/versions", namespace, providerName), registryAuthMiddleware(providerVersions))
+	http.HandleFunc(fmt.Sprintf("/v1/providers/%s/%s/%s/download/", namespace, providerName, version), registryAuthMiddleware(providerDownload))
+
+	// バイナリとチェックサムは認証不要（署名で検証される）
 	http.HandleFunc("/providers/", serveProviderBinary)
 	http.HandleFunc(fmt.Sprintf("/v1/providers/%s/%s/%s/shasums", namespace, providerName, version), serveShasums)
 	http.HandleFunc(fmt.Sprintf("/v1/providers/%s/%s/%s/shasums.sig", namespace, providerName, version), serveShaSumsSignature)
@@ -59,6 +109,7 @@ func main() {
 	log.Printf("🚀 Terraform Registry Server starting on https://%s", registryHost)
 	log.Printf("📦 Serving provider: %s/%s v%s", namespace, providerName, version)
 	log.Printf("🔐 Using mkcert certificates: %s", certFile)
+	log.Printf("🔑 Registry authentication enabled - Token: %s", registryToken)
 	log.Fatal(server.ListenAndServeTLS("", ""))
 }
 
